@@ -40,7 +40,7 @@ $$ \sum_{i=1}^{N-1} x_{i k}=\sum_{j=2}^N x_{k j} \leqslant 1 ; \quad \forall k=2
 $$ \sum_{i=1}^{N-1} \sum_{j=2}^N t_{i j} x_{i j} \leqslant T_{\max }, $$
 
 
-**Restrictions 4 y 5 **-> Prevents subtours. These subtour elimination constraints are formulated according to the Miller–Tucker–Zemlin (MTZ) formulation of the TSP:
+**Restrictions 4 y 5**-> Prevents subtours. These subtour elimination constraints are formulated according to the Miller–Tucker–Zemlin (MTZ) formulation of the TSP:
 
 $$ 2 \leqslant u_i \leqslant N ; \quad \forall i=2, \ldots, N, $$
 
@@ -52,7 +52,7 @@ $$ u_i-u_j+1 \leqslant(N-1)\left(1-x_{i j}\right) ; \quad \forall i, j=2, \ldots
 $$ x_{i j} \in\{0,1\} ; \quad \forall i, j=1, \ldots, N $$
 
 
-New Restriction -> Money limit, it only considers the cost of visiting each node:
+**New Restriction** -> Money limit, it only considers the cost of visiting each node:
 
 $$ \sum_{i=1}^{N-1} \sum_{j=2}^N c_{i} x_{i j} \leqslant \textit{Money Budget} $$
 
