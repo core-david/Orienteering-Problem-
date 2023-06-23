@@ -6,7 +6,7 @@ The Orienting Problem (OP) is a complex issue that involves selecting vertices a
 # Tour Orienteering Problem
 The OP starts at vertex 1 and ends at vertex N, but in this modeling is implemented a dummy vertex in order to turn the OP into a Tour OP, meaning that it starts at vertex 1 and ends at this same vertex. 
 
-## Mathematical Model of the TOP
+# Mathematical Model of the TOP
 The mathematical model used is almost completely based on the mathematical model presented in the paper _"The orienteering problem: A survey"_, in this modeling is added a restriction that considers a money budget, and also is added a dummy vertex, mentioned in the section before. 
 
 
