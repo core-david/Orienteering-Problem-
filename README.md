@@ -18,6 +18,8 @@ $S_i$, Score given to each vertice.
 
 $u_i$, The position of vertex $i$ in the path.
 
+$c_i$, Cost of visiting the vertx $i$.
+
 
 The function to maximize, it sums all the scores of the places visited:
 
