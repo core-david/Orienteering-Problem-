@@ -1,0 +1,465 @@
+GAMS 43.3.0  9e10b068 May 18, 2023          WEX-WEI x86 64bit/MS Windows - 06/22/23 20:30:04 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  option optcr = 0.0001
+   2   
+   3  * Here the size of the set represents the number of nodes of our graph or in this
+   4  * particular case it represents the places available to visit.
+   5  set
+   6  i /1*5/;
+   7   
+   8  Alias
+   9  (i,j,k);
+  10   
+  11  * Table with the time it takes to go from one place to other, the table is symmetrical,
+  12  * meaning that we consider that the time it takes from A to B is the same as if we go from B to A.
+  13  * The last
+  14  Table
+  15  t(i,j)
+  16      1   2   3   4   5
+  17  1   999 170 200 100 0
+  18  2   170 999 170 90  170
+  19  3   200 170 999 80  200
+  20  4   100 90  80  999 100
+  21  5   0   170 200 100 999;
+  22   
+  23  * This is the variable we want to maximize.
+  24  Variable
+  25  z;
+  26   
+  27  * Position of vertex 'i' in the path.
+  28  positive variable
+  29  u(i);
+  30   
+  31  * x_ij = 1 if a visit to vertex 'i' is followed by a visit to vertex j,
+  32  * x_ij = 0 otherwise
+  33  binary variable
+  34  x(i,j);
+  35   
+  36  * The score of each of the nodes.
+  37  parameter
+  38  s(i)/
+  39  1 0
+  40  2 1
+  41  3 7
+  42  4 5
+  43  5 0/;
+  44   
+  45  * The cost in mexican pesos of visiting each node.
+  46  parameter
+  47  c(i)/
+  48  1 0
+  49  2 200
+  50  3 300
+  51  4 250
+  52  5 0
+  53  /;
+  54   
+  55  Equations
+  56  obj
+  57  r1
+  58  r2
+  59  r3
+  60  r3
+  61  r4
+  62  r5
+  63  r6
+  64  r7
+  65  r8
+  66  r9
+  67  r10;
+  68   
+  69   
+  70  * The function to maximize, it sums all the scores of the places visited.
+  71  obj..z=E= sum((i,j)$(ord(i) > 1 and ord(j) > 1 and ord(i) < card(i) and ord(j) <= card(j)),s(i) * x(i,j));
+  72   
+  73  * Restriction 1 -> Starts at node 1 and ends at node N, that in this case the N node is a dummy node representing the first node
+  74  * converting from an orienteering problem to a tour orienteering problem.
+  75  r1.. sum(j$(ord(j) > 1), x('1',j)) =E=  1;
+  76  r2.. sum(i$(ord(i) < card(i)), x(i,'5')) =E= 1;
+  77   
+  78  * Restriction 2 -> Every node is visited at least one and it ensures connectivity between all nodes.
+  79  r3(k)$(ord(k) > 1 and ord(k) < card(k)).. sum(i$(ord(i) < card(i)),x(i,k)) - sum(j$(ord(j) > 1 and ord(j) <= card(j)),x(k,j)) =E= 0;
+  80  r4(k)$(ord(k) > 1 and ord(k) < card(k)).. sum(i$(ord(i) < card(i)),x(i,k)) =L= 1;
+  81  r5(k)$(ord(k) > 1 and ord(k) < card(k)).. sum(j$(ord(j) > 1 and ord(j) < card(j)),x(k,j)) =L= 1;
+  82   
+  83  * Restriction 3 -> Time limit
+  84  r6.. sum((i,j)$(ord(i) < card(i) and ord(j) > 1 and ord(j) <= card(j)),t(i,j) * x(i,j)) =L= 900;
+  85   
+  86  * Restrictions 4 y 5 -> Prevents subtours. These subtour elimination constraints
+  87  * are formulated according to the Miller–Tucker–Zemlin (MTZ) formulation of the TSP.
+  88  r7(i)$(ord(i) > 1).. u(i) =G= 2;
+  89  r8(i)$(ord(i) > 1).. u(i) =L= 5;
+  90  r9(i,j)$(ord(i) > 1 and ord(j) > 1 and ord(i) <> ord(j)).. u(i) - u(j) + 1 =L= (card(i)- 1) * (1 - x(i,j));
+  91   
+  92   
+  93  * New Restriction -> Money limit, it only considers the cost of visiting each node.
+  94  r10.. sum((i,j)$(ord(i) < card(i) and ord(j) > 1 and ord(j) <= card(j)),c(i) * x(i,j)) =L= 800;
+  95   
+  96   
+  97   
+  98  model op /all/;
+  99  solve op using MIP max z;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  43.3.0 9e10b068 WEX-WEI
+GAMS 43.3.0  9e10b068 May 18, 2023          WEX-WEI x86 64bit/MS Windows - 06/22/23 20:30:04 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE op Using MIP From line 99
+
+
+---- obj  =E=  
+
+obj..  z - x(2,2) - x(2,3) - x(2,4) - x(2,5) - 7*x(3,2) - 7*x(3,3) - 7*x(3,4) - 7*x(3,5) - 5*x(4,2) - 5*x(4,3) - 5*x(4,4) - 5*x(4,5) =E= 0 ; (LHS = 0)
+     
+
+---- r1  =E=  
+
+r1..  x(1,2) + x(1,3) + x(1,4) + x(1,5) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- r2  =E=  
+
+r2..  x(1,5) + x(2,5) + x(3,5) + x(4,5) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- r3  =E=  
+
+r3(2)..  x(1,2) - x(2,3) - x(2,4) - x(2,5) + x(3,2) + x(4,2) =E= 0 ; (LHS = 0)
+     
+r3(3)..  x(1,3) + x(2,3) - x(3,2) - x(3,4) - x(3,5) + x(4,3) =E= 0 ; (LHS = 0)
+     
+r3(4)..  x(1,4) + x(2,4) + x(3,4) - x(4,2) - x(4,3) - x(4,5) =E= 0 ; (LHS = 0)
+     
+
+---- r4  =L=  
+
+r4(2)..  x(1,2) + x(2,2) + x(3,2) + x(4,2) =L= 1 ; (LHS = 0)
+     
+r4(3)..  x(1,3) + x(2,3) + x(3,3) + x(4,3) =L= 1 ; (LHS = 0)
+     
+r4(4)..  x(1,4) + x(2,4) + x(3,4) + x(4,4) =L= 1 ; (LHS = 0)
+     
+
+---- r5  =L=  
+
+r5(2)..  x(2,2) + x(2,3) + x(2,4) =L= 1 ; (LHS = 0)
+     
+r5(3)..  x(3,2) + x(3,3) + x(3,4) =L= 1 ; (LHS = 0)
+     
+r5(4)..  x(4,2) + x(4,3) + x(4,4) =L= 1 ; (LHS = 0)
+     
+
+---- r6  =L=  
+
+r6..  170*x(1,2) + 200*x(1,3) + 100*x(1,4) + 999*x(2,2) + 170*x(2,3) + 90*x(2,4) + 170*x(2,5) + 170*x(3,2) + 999*x(3,3) + 80*x(3,4) + 200*x(3,5) + 90*x(4,2) + 80*x(4,3) + 999*x(4,4) + 100*x(4,5) =L= 900 ; (LHS = 0)
+     
+
+---- r7  =G=  
+
+r7(2)..  u(2) =G= 2 ; (LHS = 0, INFES = 2 ****)
+     
+r7(3)..  u(3) =G= 2 ; (LHS = 0, INFES = 2 ****)
+     
+r7(4)..  u(4) =G= 2 ; (LHS = 0, INFES = 2 ****)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- r8  =L=  
+
+r8(2)..  u(2) =L= 5 ; (LHS = 0)
+     
+r8(3)..  u(3) =L= 5 ; (LHS = 0)
+     
+r8(4)..  u(4) =L= 5 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- r9  =L=  
+
+r9(2,3)..  u(2) - u(3) + 4*x(2,3) =L= 3 ; (LHS = 0)
+     
+r9(2,4)..  u(2) - u(4) + 4*x(2,4) =L= 3 ; (LHS = 0)
+     
+r9(2,5)..  u(2) - u(5) + 4*x(2,5) =L= 3 ; (LHS = 0)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+
+---- r10  =L=  
+
+r10..  200*x(2,2) + 200*x(2,3) + 200*x(2,4) + 200*x(2,5) + 300*x(3,2) + 300*x(3,3) + 300*x(3,4) + 300*x(3,5) + 250*x(4,2) + 250*x(4,3) + 250*x(4,4) + 250*x(4,5) =L= 800 ; (LHS = 0)
+     
+GAMS 43.3.0  9e10b068 May 18, 2023          WEX-WEI x86 64bit/MS Windows - 06/22/23 20:30:04 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE op Using MIP From line 99
+
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- u  
+
+u(2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       r7(2)
+        1       r8(2)
+        1       r9(2,3)
+        1       r9(2,4)
+        1       r9(2,5)
+       -1       r9(3,2)
+       -1       r9(4,2)
+       -1       r9(5,2)
+
+u(3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       r7(3)
+        1       r8(3)
+       -1       r9(2,3)
+        1       r9(3,2)
+        1       r9(3,4)
+        1       r9(3,5)
+       -1       r9(4,3)
+       -1       r9(5,3)
+
+u(4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       r7(4)
+        1       r8(4)
+       -1       r9(2,4)
+       -1       r9(3,4)
+        1       r9(4,2)
+        1       r9(4,3)
+        1       r9(4,5)
+       -1       r9(5,4)
+
+REMAINING ENTRY SKIPPED
+
+---- x  
+
+x(1,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       r1
+        1       r3(2)
+        1       r4(2)
+      170       r6
+
+x(1,3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       r1
+        1       r3(3)
+        1       r4(3)
+      200       r6
+
+x(1,4)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       r1
+        1       r3(4)
+        1       r4(4)
+      100       r6
+
+REMAINING 16 ENTRIES SKIPPED
+GAMS 43.3.0  9e10b068 May 18, 2023          WEX-WEI x86 64bit/MS Windows - 06/22/23 20:30:04 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE op Using MIP From line 99
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 9.000E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 9.990E+02]
+
+GAMS 43.3.0  9e10b068 May 18, 2023          WEX-WEI x86 64bit/MS Windows - 06/22/23 20:30:04 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE op Using MIP From line 99
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          11     SINGLE EQUATIONS           34
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           24
+NON ZERO ELEMENTS           131     DISCRETE VARIABLES         19
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  43.3.0 9e10b068 WEX-WEI
+GAMS 43.3.0  9e10b068 May 18, 2023          WEX-WEI x86 64bit/MS Windows - 06/22/23 20:30:04 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE op Using MIP From line 99
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   op                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  99
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               13.0000
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT        10    2147483647
+--- *** This solver runs with a demo license. No commercial use.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.02sec (det. 0.24 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Proven optimal solution
+MIP Solution:           13.000000    (10 iterations, 0 nodes)
+Final Solve:            13.000000    (0 iterations)
+
+Best possible:          13.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+---- EQU r1                 1.0000         1.0000         1.0000          .          
+---- EQU r2                 1.0000         1.0000         1.0000          .          
+
+---- EQU r3  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+2          .              .              .              .          
+3          .              .              .              .          
+4          .              .              .              .          
+
+---- EQU r4  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+2        -INF            1.0000         1.0000          .          
+3        -INF            1.0000         1.0000          .          
+4        -INF            1.0000         1.0000          .          
+
+---- EQU r5  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+2        -INF            1.0000         1.0000          .          
+3        -INF            1.0000         1.0000          .          
+4        -INF             .             1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU r6                -INF          520.0000       900.0000          .          
+
+---- EQU r7  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+2         2.0000         2.0000        +INF            EPS         
+3         2.0000         3.0000        +INF             .          
+4         2.0000         4.0000        +INF             .          
+5         2.0000         5.0000        +INF             .          
+
+---- EQU r8  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+2        -INF            2.0000         5.0000          .          
+3        -INF            3.0000         5.0000          .          
+4        -INF            4.0000         5.0000          .          
+5        -INF            5.0000         5.0000         EPS         
+
+---- EQU r9  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+2.3        -INF            3.0000         3.0000         EPS         
+2.4        -INF           -2.0000         3.0000          .          
+2.5        -INF           -3.0000         3.0000          .          
+3.2        -INF            1.0000         3.0000          .          
+3.4        -INF            3.0000         3.0000          .          
+3.5        -INF           -2.0000         3.0000          .          
+4.2        -INF            2.0000         3.0000          .          
+4.3        -INF            1.0000         3.0000          .          
+4.5        -INF            3.0000         3.0000         EPS         
+5.2        -INF            3.0000         3.0000          .          
+5.3        -INF            2.0000         3.0000          .          
+5.4        -INF            1.0000         3.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU r10               -INF          750.0000       800.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           13.0000        +INF             .          
+
+---- VAR u  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+2          .             2.0000        +INF             .          
+3          .             3.0000        +INF             .          
+4          .             4.0000        +INF             .          
+5          .             5.0000        +INF             .          
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.2          .             1.0000         1.0000         EPS         
+1.3          .              .             1.0000         EPS         
+1.4          .              .             1.0000         EPS         
+1.5          .              .             1.0000         EPS         
+2.2          .              .             1.0000         1.0000      
+2.3          .             1.0000         1.0000         1.0000      
+2.4          .              .             1.0000         1.0000      
+2.5          .              .             1.0000         1.0000      
+3.2          .              .             1.0000         7.0000      
+3.3          .              .             1.0000         7.0000      
+3.4          .             1.0000         1.0000         7.0000      
+3.5          .              .             1.0000         7.0000      
+4.2          .              .             1.0000         5.0000      
+4.3          .              .             1.0000         5.0000      
+4.4          .              .             1.0000         5.0000      
+4.5          .             1.0000         1.0000         5.0000      
+5.2          .              .             1.0000         EPS         
+5.3          .              .             1.0000         EPS         
+5.4          .              .             1.0000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  43.3.0 9e10b068 WEX-WEI
+
+
+USER: GAMS Demo license for David Vargas             G230525|0002CO-GEN
+      Tecnologico de monterrey, Mexico                         DL093104
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\David\Desktop\reto\rop.gms
+Output     C:\Users\David\Desktop\reto\rop.lst
